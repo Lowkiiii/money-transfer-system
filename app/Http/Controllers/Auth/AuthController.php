@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 
 class AuthController extends Controller
 {
@@ -40,6 +42,7 @@ class AuthController extends Controller
     public function create(array $data)
     {
         return User::create([
+            //users
             'name' => $data['name'],
             'middle_name' => $data['middle_name'], //
             'last_name' => $data['last_name'], //
@@ -49,6 +52,18 @@ class AuthController extends Controller
             'full_address' => $data['full_address'], //
             'email' => $data['email'],
             'password' => bcrypt($data['password'])
+
+            //tbl_branch_profiles
+
+            
+            //tbl_transactions
+
+
+            //tbl_transaction_fees
+
+
+            //tbl_user_types
+
         ]);
     }
 
@@ -72,12 +87,30 @@ class AuthController extends Controller
         return redirect('login');
     }
 
-    public function dashboard()
+
+    public function dashboard($isAdmin = false)
     {
-        if(Auth::check()){
-            return view('dashboard');
+        if (Auth::check()) {
+            $user = Auth::user();
+            if ($isAdmin) {
+                if ($user->user_type_id != 1) {
+                    return redirect()->route('dashboard')->withSuccess('You do not have permission to access the admin dashboard.');
+                }
+                
+                $users = User::all();
+                $branches = DB::table('tbl_branch_profile')->get();
+                return view('admindashboard', compact('users', 'branches'));
+
+            } else {
+                if ($user->user_type_id != 2) {
+                    return redirect()->route('admindashboard')->withSuccess('You do not have permission to access the regular dashboard.');
+                }
+                return view('dashboard');
+            }
         }
         return redirect('login')->withSuccess('Please Login First.');
     }
+    
+
 
 }
